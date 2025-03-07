@@ -2,7 +2,9 @@
 function sendInitialGreeting() {
     fetch("https://www.propcycle.com.au/_functions/chatWithAI", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify({ message: "Hello, I just opened the chat." })
     })
     .then(response => response.json())
@@ -19,13 +21,17 @@ function sendInitialGreeting() {
     });
 }
 
-// Run the greeting when the Lightbox opens
-$w.onReady(() => {
+// Ensure the script runs when the Lightbox loads
+document.addEventListener("DOMContentLoaded", function() {
     sendInitialGreeting();
 });
 
-// Function to display messages in chat
+// Function to display messages in the chat
 function displayMessage(sender, message) {
-    const chatBox = $w("#chatBox"); // Update with your actual chatbox element ID
-    chatBox.text += `\n${sender}: ${message}`; // Append AI message to the chat UI
+    const chatBox = document.getElementById("chatBox"); // Update with actual chatbox element ID
+    if (chatBox) {
+        chatBox.innerHTML += `<p><strong>${sender}:</strong> ${message}</p>`;
+    } else {
+        console.error("Chatbox element not found.");
+    }
 }
