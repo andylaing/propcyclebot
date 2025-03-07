@@ -15,8 +15,11 @@ function sendMessage() {
     })
     .then(response => response.json())
     .then(data => {
-        const aiMessage = data.choices?.[0]?.message?.content || "I couldn't generate a response. Try again.";
-        displayMessage("AI", aiMessage); // Show AI response
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            displayMessage("AI", data.choices[0].message.content); // Show AI response
+        } else {
+            displayMessage("AI", "I couldn't generate a response. Try again.");
+        }
     })
     .catch(error => {
         console.error("Error:", error);
@@ -42,8 +45,11 @@ function sendInitialGreeting() {
     })
     .then(response => response.json())
     .then(data => {
-        const greetingMessage = data.choices?.[0]?.message?.content || "Hello! How can I assist you today?";
-        displayMessage("AI", greetingMessage);
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            displayMessage("AI", data.choices[0].message.content);
+        } else {
+            displayMessage("AI", "Hello! How can I assist you today?");
+        }
     })
     .catch(error => {
         console.error("Error:", error);
