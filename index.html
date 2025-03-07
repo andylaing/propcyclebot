@@ -1,10 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>PropCycle Bot</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PropCycle AI Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        #chat-container {
+            width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            background: #fff;
+        }
+        #user-input {
+            width: calc(100% - 70px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #send-button {
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #send-button:hover {
+            background: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <h1>PropCycle Bot JavaScript</h1>
-    <p>Click <a href="jslightbox.js">here</a> to view the script.</p>
+
+    <div id="chat-container">
+        <h2>Chat with AI</h2>
+        <div id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="Type a message..." />
+        <button id="send-button">Send</button>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById("chat-box");
+        const userInput = document.getElementById("user-input");
+        const sendButton = document.getElementById("send-button");
+
+        function displayMessage(sender, message) {
+            chatBox.innerHTML += `<p><strong>${sender}:</strong> ${message}</p>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            displayMessage("You", message);
+            userInput.value = "";
+
+            fetch("https://propcycle.com.au/functions/chatWithAI", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.response) {
+                    displayMessage("AI", data.response);
+                } else {
+                    displayMessage("AI", "Sorry, I couldn't generate a response.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                displayMessage("AI", "There was a problem connecting to the AI.");
+            });
+        }
+
+        sendButton.addEventListener("click", sendMessage);
+        userInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        // Send an initial AI greeting when the page loads
+        window.onload = function() {
+            displayMessage("AI", "Hello! How can I assist you today?");
+        };
+    </script>
+
 </body>
 </html>
