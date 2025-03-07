@@ -60,6 +60,8 @@
         const userInput = document.getElementById("user-input");
         const sendButton = document.getElementById("send-button");
 
+        const API_URL = "https://propcycle-ai-bot.andy-fc3.workers.dev/"; // Correct API URL
+
         function displayMessage(sender, message) {
             chatBox.innerHTML += `<p><strong>${sender}:</strong> ${message}</p>`;
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -72,15 +74,15 @@
             displayMessage("You", message);
             userInput.value = "";
 
-            fetch("https://propcycle.com.au/functions/chatWithAI", {
+            fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.response) {
-                    displayMessage("AI", data.response);
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    displayMessage("AI", data.choices[0].message.content);
                 } else {
                     displayMessage("AI", "Sorry, I couldn't generate a response.");
                 }
