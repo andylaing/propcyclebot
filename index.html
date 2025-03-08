@@ -29,9 +29,9 @@
         }
         .chat-button {
             display: block;
-            margin: 10px auto;
+            width: 90%;
+            margin: 5px auto;
             padding: 10px;
-            width: 80%;
             background: #007bff;
             color: white;
             border: none;
@@ -41,22 +41,6 @@
         .chat-button:hover {
             background: #0056b3;
         }
-        #user-input {
-            width: calc(100% - 70px);
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            display: none; /* Hide for now */
-        }
-        #send-button {
-            padding: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 4px;
-            display: none; /* Hide for now */
-        }
     </style>
 </head>
 <body>
@@ -64,7 +48,7 @@
     <div id="chat-container">
         <h2>Chat with AI</h2>
         <div id="chat-box"></div>
-        <div id="button-container"></div> <!-- Buttons go here -->
+        <div id="button-container"></div>
         <input type="text" id="user-input" placeholder="Type a message..." />
         <button id="send-button">Send</button>
     </div>
@@ -72,31 +56,56 @@
     <script>
         const API_URL = "https://propcycle-ai-bot.andy-fc3.workers.dev/";
         const chatBox = document.getElementById("chat-box");
-        const buttonContainer = document.getElementById("button-container");
         const userInput = document.getElementById("user-input");
         const sendButton = document.getElementById("send-button");
+        const buttonContainer = document.getElementById("button-container");
+        let sessionHistory = [];
 
         function displayMessage(sender, message) {
             chatBox.innerHTML += `<p><strong>${sender}:</strong> ${message}</p>`;
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function sendMessage(message) {
+        function createButtons(options) {
+            buttonContainer.innerHTML = "";
+            options.forEach(option => {
+                const button = document.createElement("button");
+                button.classList.add("chat-button");
+                button.textContent = option;
+                button.onclick = () => sendMessage(option);
+                buttonContainer.appendChild(button);
+            });
+        }
+
+        function sendMessage(message = null) {
+            if (!message) {
+                message = userInput.value.trim();
+                if (!message) return;
+            }
+
             displayMessage("You", message);
-            buttonContainer.innerHTML = ""; // Clear buttons
+            userInput.value = "";
 
             fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ message, sessionHistory })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.response) {
-                    displayMessage("AI", data.response);
-                    handleAIResponse(data.response);
+                displayMessage("AI", data.response);
+                sessionHistory.push({ user: message, bot: data.response });
+
+                if (data.response.includes("SELL, FIND, FUND, or CONNECT")) {
+                    createButtons(["SELL", "FIND", "FUND", "CONNECT"]);
+                } else if (data.response.includes("Project Stock") || data.response.includes("New Project")) {
+                    createButtons(["Project Stock", "New Project"]);
+                } else if (data.response.includes("Investors") || data.response.includes("Owner-Occupiers")) {
+                    createButtons(["Investors", "Owner-Occupiers", "Both"]);
+                } else if (data.response.includes("Immediately") || data.response.includes("1-3 Months")) {
+                    createButtons(["Immediately", "1-3 Months", "Later"]);
                 } else {
-                    displayMessage("AI", "Sorry, I couldn't generate a response.");
+                    buttonContainer.innerHTML = ""; 
                 }
             })
             .catch(error => {
@@ -105,29 +114,15 @@
             });
         }
 
-        function handleAIResponse(response) {
-            buttonContainer.innerHTML = ""; // Clear previous buttons
-
-            if (response.includes("SELL") || response.includes("FIND") || response.includes("FUND") || response.includes("CONNECT")) {
-                createChatButton("SELL", "sell");
-                createChatButton("FIND", "find");
-                createChatButton("FUND", "fund");
-                createChatButton("CONNECT", "connect");
+        sendButton.addEventListener("click", sendMessage);
+        userInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
             }
-        }
-
-        function createChatButton(label, value) {
-            let button = document.createElement("button");
-            button.innerText = label;
-            button.className = "chat-button";
-            button.onclick = function() {
-                sendMessage(value);
-            };
-            buttonContainer.appendChild(button);
-        }
+        });
 
         window.onload = function() {
-            sendMessage("Hello AI");
+            displayMessage("AI", "Hello! How can I assist you today?");
         };
     </script>
 
