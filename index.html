@@ -27,11 +27,26 @@
             text-align: left;
             background: #fff;
         }
+        .chat-button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            width: 80%;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .chat-button:hover {
+            background: #0056b3;
+        }
         #user-input {
             width: calc(100% - 70px);
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            display: none; /* Hide for now */
         }
         #send-button {
             padding: 10px;
@@ -40,9 +55,7 @@
             border: none;
             cursor: pointer;
             border-radius: 4px;
-        }
-        #send-button:hover {
-            background: #0056b3;
+            display: none; /* Hide for now */
         }
     </style>
 </head>
@@ -51,28 +64,26 @@
     <div id="chat-container">
         <h2>Chat with AI</h2>
         <div id="chat-box"></div>
+        <div id="button-container"></div> <!-- Buttons go here -->
         <input type="text" id="user-input" placeholder="Type a message..." />
         <button id="send-button">Send</button>
     </div>
 
     <script>
+        const API_URL = "https://propcycle-ai-bot.andy-fc3.workers.dev/";
         const chatBox = document.getElementById("chat-box");
+        const buttonContainer = document.getElementById("button-container");
         const userInput = document.getElementById("user-input");
         const sendButton = document.getElementById("send-button");
-
-        const API_URL = "https://propcycle-ai-bot.andy-fc3.workers.dev/"; // Correct API URL
 
         function displayMessage(sender, message) {
             chatBox.innerHTML += `<p><strong>${sender}:</strong> ${message}</p>`;
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) return;
-
+        function sendMessage(message) {
             displayMessage("You", message);
-            userInput.value = "";
+            buttonContainer.innerHTML = ""; // Clear buttons
 
             fetch(API_URL, {
                 method: "POST",
@@ -81,8 +92,9 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    displayMessage("AI", data.choices[0].message.content);
+                if (data.response) {
+                    displayMessage("AI", data.response);
+                    handleAIResponse(data.response);
                 } else {
                     displayMessage("AI", "Sorry, I couldn't generate a response.");
                 }
@@ -93,16 +105,29 @@
             });
         }
 
-        sendButton.addEventListener("click", sendMessage);
-        userInput.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                sendMessage();
-            }
-        });
+        function handleAIResponse(response) {
+            buttonContainer.innerHTML = ""; // Clear previous buttons
 
-        // Send an initial AI greeting when the page loads
+            if (response.includes("SELL") || response.includes("FIND") || response.includes("FUND") || response.includes("CONNECT")) {
+                createChatButton("SELL", "sell");
+                createChatButton("FIND", "find");
+                createChatButton("FUND", "fund");
+                createChatButton("CONNECT", "connect");
+            }
+        }
+
+        function createChatButton(label, value) {
+            let button = document.createElement("button");
+            button.innerText = label;
+            button.className = "chat-button";
+            button.onclick = function() {
+                sendMessage(value);
+            };
+            buttonContainer.appendChild(button);
+        }
+
         window.onload = function() {
-            displayMessage("AI", "Hello! How can I assist you today?");
+            sendMessage("Hello AI");
         };
     </script>
 
