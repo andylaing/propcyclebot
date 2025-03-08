@@ -27,8 +27,21 @@
             text-align: left;
             background: #fff;
         }
+        .chat-message {
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .user-message {
+            background-color: #d1e7fd;
+            text-align: right;
+        }
+        .bot-message {
+            background-color: #f1f1f1;
+            text-align: left;
+        }
         #user-input {
-            width: calc(100% - 70px);
+            width: calc(100% - 80px);
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -45,14 +58,13 @@
             background: #0056b3;
         }
         .option-button {
-            display: inline-block;
             margin: 5px;
             padding: 8px 12px;
+            border: none;
             background: #007bff;
             color: white;
-            border: none;
-            cursor: pointer;
             border-radius: 4px;
+            cursor: pointer;
         }
         .option-button:hover {
             background: #0056b3;
@@ -73,43 +85,65 @@
         const userInput = document.getElementById("user-input");
         const sendButton = document.getElementById("send-button");
 
-        function displayMessage(sender, message, isButton = false) {
-            if (!message) return; // Prevent undefined errors
-            
-            if (isButton) {
-                chatBox.innerHTML += `<p><strong>${sender}:</strong> <button class='option-button' onclick='sendMessage("${message}")'>${message}</button></p>`;
-            } else {
-                chatBox.innerHTML += `<p><strong>${sender}:</strong> ${message}</p>`;
-            }
+        function displayMessage(sender, message, isUser = false) {
+            const msgDiv = document.createElement("div");
+            msgDiv.classList.add("chat-message", isUser ? "user-message" : "bot-message");
+            msgDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function sendMessage(inputMessage) {
-            let message = typeof inputMessage === 'string' ? inputMessage : userInput.value.trim();
-            if (!message) return;
-            
-            displayMessage("You", message);
+        function sendMessage(userText) {
+            if (!userText) return;
+
+            displayMessage("You", userText, true);
             userInput.value = "";
 
             fetch("https://propcycle-ai-bot.andy-fc3.workers.dev/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ message: userText })
             })
             .then(response => response.json())
             .then(data => {
-                console.log("API Response:", data); // Log full API response
                 if (data.response) {
                     displayMessage("AI", data.response);
-                    if (data.options) {
-                        data.options.forEach(option => {
-                            displayMessage("AI", option, true);
-                        });
-                    }
+                    handleBotOptions(data.options);
                 } else {
                     displayMessage("AI", "Sorry, I couldn't generate a response.");
                 }
             })
             .catch(error => {
                 console.error("Error:", error);
-                displayMessage("AI", "There was a problem connecting to
+                displayMessage("AI", "There was a problem connecting to the AI.");
+            });
+        }
+
+        function handleBotOptions(options) {
+            if (!options || !Array.isArray(options)) return;
+
+            const buttonsDiv = document.createElement("div");
+            options.forEach(option => {
+                const button = document.createElement("button");
+                button.innerText = option;
+                button.classList.add("option-button");
+                button.onclick = () => sendMessage(option);
+                buttonsDiv.appendChild(button);
+            });
+
+            chatBox.appendChild(buttonsDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        sendButton.addEventListener("click", () => sendMessage(userInput.value.trim()));
+        userInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") sendMessage(userInput.value.trim());
+        });
+
+        window.onload = function() {
+            displayMessage("AI", "Hello! How can I assist you today?");
+        };
+    </script>
+
+</body>
+</html>
