@@ -58,7 +58,9 @@
             background: #0056b3;
         }
         .option-button {
-            margin: 5px;
+            display: block;
+            width: 100%;
+            margin: 5px 0;
             padding: 8px 12px;
             border: none;
             background: #007bff;
@@ -76,6 +78,7 @@
     <div id="chat-container">
         <h2>Chat with AI</h2>
         <div id="chat-box"></div>
+        <div id="options-container"></div>
         <input type="text" id="user-input" placeholder="Type a message..." />
         <button id="send-button">Send</button>
     </div>
@@ -84,6 +87,7 @@
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
         const sendButton = document.getElementById("send-button");
+        const optionsContainer = document.getElementById("options-container");
 
         function displayMessage(sender, message, isUser = false) {
             const msgDiv = document.createElement("div");
@@ -98,6 +102,7 @@
 
             displayMessage("You", userText, true);
             userInput.value = "";
+            optionsContainer.innerHTML = ""; // Clear buttons before sending request
 
             fetch("https://propcycle-ai-bot.andy-fc3.workers.dev/", {
                 method: "POST",
@@ -120,19 +125,16 @@
         }
 
         function handleBotOptions(options) {
-            if (!options || !Array.isArray(options)) return;
+            optionsContainer.innerHTML = ""; // Ensure previous buttons are cleared
+            if (!options || !Array.isArray(options) || options.length === 0) return;
 
-            const buttonsDiv = document.createElement("div");
             options.forEach(option => {
                 const button = document.createElement("button");
                 button.innerText = option;
                 button.classList.add("option-button");
                 button.onclick = () => sendMessage(option);
-                buttonsDiv.appendChild(button);
+                optionsContainer.appendChild(button);
             });
-
-            chatBox.appendChild(buttonsDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         sendButton.addEventListener("click", () => sendMessage(userInput.value.trim()));
