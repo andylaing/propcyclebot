@@ -3,7 +3,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const userInput = document.getElementById("user-input");
     const sendButton = document.getElementById("send-button");
     const speakButton = document.getElementById("speak-button");
-    
+    const stopRecordingButton = document.createElement("button");
+
     let isRecording = false;
     let recognition;
     let conversationState = "start";
@@ -99,18 +100,26 @@ document.addEventListener("DOMContentLoaded", function () {
         speakButton.innerText = "Recording...";
         speakButton.style.backgroundColor = "red";
 
-        displayMessage("AI", "Recording your response... Click 'Finished Recording' when done.");
+        stopRecordingButton.innerText = "Finished Recording";
+        stopRecordingButton.style.backgroundColor = "#007bff";
+        stopRecordingButton.style.color = "white";
+        stopRecordingButton.style.border = "none";
+        stopRecordingButton.style.padding = "10px";
+        stopRecordingButton.style.marginTop = "5px";
+        stopRecordingButton.style.cursor = "pointer";
+        stopRecordingButton.addEventListener("click", stopRecording);
+
+        document.getElementById("chat-container").appendChild(stopRecordingButton);
 
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = "en-US";
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
+        let capturedText = "";
+
         recognition.onresult = function (event) {
-            const transcript = event.results[0][0].transcript;
-            console.log("Voice Input:", transcript);
-            displayMessage("You", transcript, true);
-            processResponse(transcript);
+            capturedText = event.results[0][0].transcript;
         };
 
         recognition.onerror = function (event) {
@@ -122,9 +131,22 @@ document.addEventListener("DOMContentLoaded", function () {
             isRecording = false;
             speakButton.innerText = "Speak";
             speakButton.style.backgroundColor = "green";
+            document.getElementById("chat-container").removeChild(stopRecordingButton);
         };
 
         recognition.start();
+    }
+
+    function stopRecording() {
+        if (recognition) {
+            recognition.stop();
+            setTimeout(() => {
+                if (capturedText) {
+                    displayMessage("You", capturedText, true);
+                    processResponse(capturedText);
+                }
+            }, 1000);
+        }
     }
 
     sendButton.addEventListener("click", () => processResponse(userInput.value.trim()));
