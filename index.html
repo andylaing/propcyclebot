@@ -1,25 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="styles.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PropCycle AI Chatbot</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        #chat-container {
+            width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            background: #fff;
+        }
+        .chat-message {
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .user-message {
+            background-color: #d1e7fd;
+            text-align: right;
+        }
+        .bot-message {
+            background-color: #f1f1f1;
+            text-align: left;
+        }
+        #user-input {
+            width: calc(100% - 80px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #send-button {
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .speak-button {
+            margin-top: 10px;
+            padding: 10px;
+            background: green;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .stop-recording-button {
+            margin-top: 10px;
+            padding: 10px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1><a href="https://propcycle.com.au/">PropCycle</a></h1>
-    </header>
 
     <div id="chat-container">
-        <button id="stop-recording-btn" style="display: none;">Click here once you have finished recording your response</button>
-        <h2>Chat with AI</h2>
+        <h2>PropCycle</h2>
+        <h3>Chat with AI</h3>
         <div id="chat-box"></div>
-        <input type="text" id="user-input" placeholder="Type a message...">
+        <input type="text" id="user-input" placeholder="Type a message..." />
         <button id="send-button">Send</button>
-        <button id="voice-button">🎤 Speak</button>
-        <button id="confirm-voice" style="display:none;">Send Response</button>
+        <button id="speak-button" class="speak-button">🎤 Speak</button>
+        <button id="stop-recording-btn" class="stop-recording-button">Click here once you have finished recording</button>
     </div>
 
     <script src="script.js"></script>
