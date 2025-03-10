@@ -3,15 +3,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const userInput = document.getElementById("user-input");
     const sendButton = document.getElementById("send-button");
     const speakButton = document.getElementById("speak-button");
-    const finishRecordingButton = document.getElementById("finish-recording-button");
+    const stopSpeakButton = document.getElementById("stop-speak-button");
 
-    if (!chatBox || !userInput || !sendButton || !speakButton || !finishRecordingButton) {
-        console.error("One or more required elements are missing from the DOM.");
-        return;
-    }
-
-    let isRecording = false;
     let recognition;
+    let isRecording = false;
 
     function displayMessage(sender, message, isUser = false) {
         const msgDiv = document.createElement("div");
@@ -35,9 +30,8 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => {
             if (data.response) {
                 displayMessage("AI", data.response);
-                handleBotOptions(data.options);
             } else {
-                displayMessage("AI", "Sorry, I didn't understand that. Could you clarify?");
+                displayMessage("AI", "Sorry, I couldn't understand that.");
             }
         })
         .catch(error => {
@@ -46,69 +40,61 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function handleBotOptions(options) {
-        if (!options || !Array.isArray(options)) return;
-        const buttonsDiv = document.createElement("div");
-        options.forEach(option => {
-            const button = document.createElement("button");
-            button.innerText = option;
-            button.classList.add("option-button");
-            button.onclick = () => sendMessage(option);
-            buttonsDiv.appendChild(button);
-        });
-        chatBox.appendChild(buttonsDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
     sendButton.addEventListener("click", () => sendMessage(userInput.value.trim()));
+
     userInput.addEventListener("keypress", function(event) {
         if (event.key === "Enter") sendMessage(userInput.value.trim());
     });
 
-    // ---- 🎤 Voice Recognition Logic ----
-    function startSpeechRecognition() {
-        if (isRecording) return; // Prevent multiple recognitions
-        isRecording = true;
-        speakButton.innerText = "Recording... Click 'Finished Recording'";
+    function startVoiceRecognition() {
+        if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+            alert("Your browser does not support speech recognition.");
+            return;
+        }
 
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.lang = "en-US";
 
+        recognition.onstart = function () {
+            isRecording = true;
+            speakButton.style.display = "none";
+            stopSpeakButton.style.display = "block";
+            displayMessage("AI", "Recording your response... Click 'Finished Recording' when done.");
+        };
+
         recognition.onresult = function (event) {
-            const transcript = event.results[0][0].transcript;
-            userInput.value = transcript;
+            let transcript = event.results[0][0].transcript;
+            displayMessage("You", transcript, true);
+            sendMessage(transcript);
         };
 
         recognition.onerror = function (event) {
-            console.error("Speech Recognition Error:", event.error);
-            displayMessage("AI", "Sorry, I couldn't understand. Try again.");
+            console.error("Speech recognition error:", event);
+            displayMessage("AI", "Voice input error. Please try again.");
         };
 
         recognition.onend = function () {
             isRecording = false;
-            speakButton.innerText = "Speak";
-            finishRecordingButton.style.display = "block";
+            speakButton.style.display = "block";
+            stopSpeakButton.style.display = "none";
         };
 
         recognition.start();
     }
 
-    function stopSpeechRecognition() {
-        if (recognition) {
+    function stopVoiceRecognition() {
+        if (recognition && isRecording) {
             recognition.stop();
-            finishRecordingButton.style.display = "none";
-            sendMessage(userInput.value.trim()); // Send message after recording
+            isRecording = false;
         }
     }
 
-    speakButton.addEventListener("click", startSpeechRecognition);
-    finishRecordingButton.addEventListener("click", stopSpeechRecognition);
+    speakButton.addEventListener("click", startVoiceRecognition);
+    stopSpeakButton.addEventListener("click", stopVoiceRecognition);
 
-    // ---- Start the AI Conversation ----
+    // Start the chat with an initial AI message
     displayMessage("AI", "Welcome to your Sales Growth Roadmap! Let's get started.");
-    setTimeout(() => {
-        displayMessage("AI", "What's your full name?");
-    }, 1000);
+    setTimeout(() => displayMessage("AI", "What's your full name?"), 1500);
 });
