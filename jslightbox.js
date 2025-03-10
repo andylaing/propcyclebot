@@ -1,4 +1,3 @@
-// JavaScript Logic for AI Chatbot
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
@@ -15,48 +14,29 @@ function sendMessage(userText) {
     if (!userText) return;
     displayMessage("You", userText, true);
     userInput.value = "";
-    
+
     fetch("https://propcycle-ai-bot.andy-fc3.workers.dev/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText })
+        body: JSON.stringify({ message: userText, sessionHistory: [] })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.response) {
-            displayMessage("AI", data.response);
-            handleBotOptions(data.options);
-        } else {
-            displayMessage("AI", "Sorry, I couldn't generate a response.");
+        displayMessage("AI", data.response);
+        if (data.options) {
+            data.options.forEach(option => {
+                const button = document.createElement("button");
+                button.innerText = option;
+                button.classList.add("option-button");
+                button.onclick = () => sendMessage(option);
+                chatBox.appendChild(button);
+            });
         }
     })
-    .catch(error => {
-        console.error("Error:", error);
-        displayMessage("AI", "There was a problem connecting to the AI.");
-    });
+    .catch(error => console.error("Error:", error));
 }
 
-function handleBotOptions(options) {
-    if (!options || !Array.isArray(options)) return;
-    const buttonsDiv = document.createElement("div");
-    options.forEach(option => {
-        const button = document.createElement("button");
-        button.innerText = option;
-        button.classList.add("option-button");
-        button.onclick = () => sendMessage(option);
-        buttonsDiv.appendChild(button);
-    });
-    chatBox.appendChild(buttonsDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// Event Listeners
 sendButton.addEventListener("click", () => sendMessage(userInput.value.trim()));
 userInput.addEventListener("keypress", function(event) {
     if (event.key === "Enter") sendMessage(userInput.value.trim());
 });
-
-// Initialize Chat on Page Load
-window.onload = function() {
-    displayMessage("AI", "Hello! How can I assist you today?");
-};
