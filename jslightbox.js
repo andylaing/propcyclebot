@@ -1,5 +1,4 @@
 // JavaScript Logic for AI Chatbot
-const jsContent = `
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
@@ -51,12 +50,13 @@ function handleBotOptions(options) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+// Event Listeners
 sendButton.addEventListener("click", () => sendMessage(userInput.value.trim()));
 userInput.addEventListener("keypress", function(event) {
     if (event.key === "Enter") sendMessage(userInput.value.trim());
 });
+
+// Initialize Chat on Page Load
 window.onload = function() {
     displayMessage("AI", "Hello! How can I assist you today?");
-};`;
-
-export { htmlContent, jsContent };
+};
