@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let isRecording = false;
     let recognition;
+    let conversationState = "start"; // Tracks conversation flow
 
     function displayMessage(sender, message, isUser = false) {
         const msgDiv = document.createElement("div");
@@ -15,51 +16,88 @@ document.addEventListener("DOMContentLoaded", function () {
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function sendMessage(userText) {
+    function processResponse(userText) {
         if (!userText) return;
         displayMessage("You", userText, true);
         userInput.value = "";
 
-        fetch("https://propcycle-ai-bot.andy-fc3.workers.dev/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: userText })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("AI Response:", data);
-            if (data.response) {
-                displayMessage("AI", data.response);
-                handleBotOptions(data.options);
-            } else {
-                displayMessage("AI", "Sorry, I couldn't generate a response.");
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            displayMessage("AI", "There was a problem connecting to the AI.");
-        });
-    }
+        let aiMessage = "";
+        let nextState = conversationState;
 
-    function handleBotOptions(options) {
-        if (!options || !Array.isArray(options)) return;
-        const buttonsDiv = document.createElement("div");
-        options.forEach(option => {
-            const button = document.createElement("button");
-            button.innerText = option;
-            button.classList.add("option-button");
-            button.onclick = () => sendMessage(option);
-            buttonsDiv.appendChild(button);
-        });
-        chatBox.appendChild(buttonsDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        switch (conversationState) {
+            case "start":
+                aiMessage = "Let's begin. What's your full name?";
+                nextState = "get_name";
+                break;
+            case "get_name":
+                aiMessage = `Nice to meet you, ${userText}. What's your business name?`;
+                nextState = "get_business_name";
+                break;
+            case "get_business_name":
+                aiMessage = `Great! What is your role in ${userText}? (Owner, Sales Manager, Director, Other)`;
+                nextState = "get_role";
+                break;
+            case "get_role":
+                aiMessage = `Got it. Now, where does your business primarily operate? (Regions, States, Cities)`;
+                nextState = "get_location";
+                break;
+            case "get_location":
+                aiMessage = `Thanks! Let's talk about your customers. Who is your ideal buyer? (First Home Buyers, Investors, Upgraders, Downsizers, etc.)`;
+                nextState = "get_buyer_profile";
+                break;
+            case "get_buyer_profile":
+                aiMessage = `Understood. What motivates these buyers to purchase? (Affordability, Capital Growth, Lifestyle Upgrade, etc.)`;
+                nextState = "get_buyer_motivation";
+                break;
+            case "get_buyer_motivation":
+                aiMessage = `Thanks! What type of projects do you build? (Single-Family Homes, Townhouses, Apartments, etc.)`;
+                nextState = "get_project_type";
+                break;
+            case "get_project_type":
+                aiMessage = `Noted. What is the average sales price for these projects?`;
+                nextState = "get_sales_price";
+                break;
+            case "get_sales_price":
+                aiMessage = `What percentage of your total projects come from this type?`;
+                nextState = "get_project_percentage";
+                break;
+            case "get_project_percentage":
+                aiMessage = `Now, let's talk sales. How many sales did you close in 2024?`;
+                nextState = "get_sales_volume";
+                break;
+            case "get_sales_volume":
+                aiMessage = `What is your target for 2025?`;
+                nextState = "get_sales_target";
+                break;
+            case "get_sales_target":
+                aiMessage = `Thanks! What’s preventing you from reaching that goal? (Lack of Leads, Pricing Issues, Market Conditions, etc.)`;
+                nextState = "get_sales_challenges";
+                break;
+            case "get_sales_challenges":
+                aiMessage = `Understood. Finally, what makes you different from your competitors? (Speed, Quality, Price, Local Knowledge, etc.)`;
+                nextState = "get_unique_value";
+                break;
+            case "get_unique_value":
+                aiMessage = `Great! We've gathered the key information. Your Sales Growth Roadmap is being generated. Would you like to book a strategy call or download a PDF?`;
+                nextState = "final_step";
+                break;
+            case "final_step":
+                aiMessage = `Thanks for your time! A copy of your roadmap will be sent to your email. Have a great day!`;
+                nextState = "complete";
+                break;
+            default:
+                aiMessage = `I'm not sure I understood that. Can you clarify?`;
+        }
+
+        conversationState = nextState;
+        displayMessage("AI", aiMessage);
     }
 
     function startRecording() {
         if (isRecording) return;
         isRecording = true;
-        displayMessage("AI", "Recording your response...");
-        
+        displayMessage("AI", "Recording your response... Click 'Finished Recording' when done.");
+
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = "en-US";
         recognition.interimResults = false;
@@ -69,7 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const transcript = event.results[0][0].transcript;
             console.log("Voice Input:", transcript);
             displayMessage("You", transcript, true);
-            sendMessage(transcript);
+            processResponse(transcript);
         };
 
         recognition.onerror = function (event) {
@@ -84,9 +122,9 @@ document.addEventListener("DOMContentLoaded", function () {
         recognition.start();
     }
 
-    sendButton.addEventListener("click", () => sendMessage(userInput.value.trim()));
+    sendButton.addEventListener("click", () => processResponse(userInput.value.trim()));
     userInput.addEventListener("keypress", function (event) {
-        if (event.key === "Enter") sendMessage(userInput.value.trim());
+        if (event.key === "Enter") processResponse(userInput.value.trim());
     });
 
     speakButton.addEventListener("click", startRecording);
@@ -94,6 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Start the AI conversation immediately on page load
     displayMessage("AI", "Welcome to your Sales Growth Roadmap! Let's get started.");
     setTimeout(() => {
-        sendMessage("Start the process");
+        displayMessage("AI", "What's your full name?");
+        conversationState = "get_name";
     }, 2000);
 });
