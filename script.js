@@ -5,6 +5,8 @@ const sendButton = document.getElementById("send-button");
 const speakButton = document.getElementById("speak-button");
 const stopRecordingButton = document.getElementById("stop-recording-btn");
 
+let conversationHistory = []; // Store chat history
+
 // Display messages in chat box
 function displayMessage(sender, message, isUser = false) {
     const msgDiv = document.createElement("div");
@@ -20,17 +22,20 @@ function sendMessage(userText) {
     displayMessage("You", userText, true);
     userInput.value = "";
 
+    conversationHistory.push({ role: "user", message: userText });
+
     fetch("https://propcycle-ai-bot.andy-fc3.workers.dev/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText })
+        body: JSON.stringify({ message: userText, history: conversationHistory })
     })
     .then(response => response.json())
     .then(data => {
         if (data.response) {
             displayMessage("AI", data.response);
+            conversationHistory.push({ role: "bot", message: data.response });
         } else {
-            displayMessage("AI", "Sorry, I couldn't generate a response.");
+            displayMessage("AI", "I didn't quite get that. Could you try again?");
         }
     })
     .catch(error => {
@@ -80,7 +85,8 @@ recognition.onerror = (event) => {
     displayMessage("AI", "Sorry, I couldn't understand that.");
 };
 
-// Initial AI greeting
+// **✅ AI Starts Automatically with the First Question**
 window.onload = function() {
     displayMessage("AI", "Welcome to your Sales Growth Roadmap! Let’s get started.");
+    setTimeout(() => displayMessage("AI", "What's your full name?"), 1000);
 };
