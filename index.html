@@ -4,99 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PropCycle AI Chatbot</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; padding: 20px; }
-        #chat-container { width: 400px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); }
-        #chat-box { height: 300px; overflow-y: scroll; border: 1px solid #ddd; padding: 10px; text-align: left; background: #fff; }
-        .chat-message { padding: 8px; border-radius: 4px; margin: 5px 0; }
-        .user-message { background-color: #d1e7fd; }
-        .bot-message { background-color: #f1f1f1; }
-        #user-input { width: 75%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; }
-        #send-button, #voice-button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        #voice-button { background: #28a745; margin-left: 5px; }
-        .option-button { margin: 5px; padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <header>
+        <h1><a href="https://propcycle.com.au/">PropCycle</a></h1>
+    </header>
+
     <div id="chat-container">
         <h2>Chat with AI</h2>
         <div id="chat-box"></div>
         <input type="text" id="user-input" placeholder="Type a message...">
         <button id="send-button">Send</button>
         <button id="voice-button">🎤 Speak</button>
+        <button id="confirm-voice" style="display:none;">Send Response</button>
     </div>
 
-    <script>
-        const chatBox = document.getElementById("chat-box");
-        const userInput = document.getElementById("user-input");
-        const sendButton = document.getElementById("send-button");
-        const voiceButton = document.getElementById("voice-button");
-
-        function displayMessage(sender, message, isUser = false) {
-            const msgDiv = document.createElement("div");
-            msgDiv.classList.add("chat-message", isUser ? "user-message" : "bot-message");
-            msgDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function sendMessage(userText) {
-            if (!userText) return;
-            displayMessage("You", userText, true);
-            userInput.value = "";
-
-            fetch("https://propcycle-ai-bot.andy-fc3.workers.dev/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userText })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.response) {
-                    displayMessage("AI", data.response);
-                    handleBotOptions(data.options);
-                } else {
-                    displayMessage("AI", "Sorry, I couldn't generate a response.");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                displayMessage("AI", "There was a problem connecting to the AI.");
-            });
-        }
-
-        function handleBotOptions(options) {
-            if (!options || !Array.isArray(options)) return;
-            const buttonsDiv = document.createElement("div");
-            options.forEach(option => {
-                const button = document.createElement("button");
-                button.innerText = option;
-                button.classList.add("option-button");
-                button.onclick = () => sendMessage(option);
-                buttonsDiv.appendChild(button);
-            });
-            chatBox.appendChild(buttonsDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        sendButton.addEventListener("click", () => sendMessage(userInput.value.trim()));
-        userInput.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") sendMessage(userInput.value.trim());
-        });
-
-        voiceButton.addEventListener("click", async () => {
-            const recognition = new webkitSpeechRecognition() || new SpeechRecognition();
-            recognition.lang = "en-US";
-            recognition.start();
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                sendMessage(transcript);
-            };
-        });
-
-        window.onload = function() {
-            displayMessage("AI", "Welcome to your Sales Growth Roadmap! Let’s get started.");
-        };
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
