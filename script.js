@@ -1,9 +1,11 @@
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
-let sessionHistory = []; // Store conversation history
+const voiceButton = document.getElementById("voice-button");
+const confirmVoiceButton = document.getElementById("confirm-voice");
 
-// Function to display messages
+let tempVoiceInput = "";
+
 function displayMessage(sender, message, isUser = false) {
     const msgDiv = document.createElement("div");
     msgDiv.classList.add("chat-message", isUser ? "user-message" : "bot-message");
@@ -12,28 +14,23 @@ function displayMessage(sender, message, isUser = false) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Function to send messages to the AI backend
 function sendMessage(userText) {
     if (!userText) return;
-    
     displayMessage("You", userText, true);
     userInput.value = "";
-
-    sessionHistory.push({ user: userText });
 
     fetch("https://propcycle-ai-bot.andy-fc3.workers.dev/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText, sessionHistory })
+        body: JSON.stringify({ message: userText })
     })
     .then(response => response.json())
     .then(data => {
         if (data.response) {
             displayMessage("AI", data.response);
-            sessionHistory.push({ bot: data.response });
-        }
-        if (data.options && data.options.length > 0) {
-            displayOptions(data.options);
+            handleBotOptions(data.options);
+        } else {
+            displayMessage("AI", "Sorry, I couldn't generate a response.");
         }
     })
     .catch(error => {
@@ -42,8 +39,8 @@ function sendMessage(userText) {
     });
 }
 
-// Function to show AI options as buttons
-function displayOptions(options) {
+function handleBotOptions(options) {
+    if (!options || !Array.isArray(options)) return;
     const buttonsDiv = document.createElement("div");
     options.forEach(option => {
         const button = document.createElement("button");
@@ -56,31 +53,25 @@ function displayOptions(options) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Automatically start conversation when the page loads
-window.onload = function() {
-    fetch("https://propcycle-ai-bot.andy-fc3.workers.dev/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "", sessionHistory })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.response) {
-            displayMessage("AI", data.response);
-            sessionHistory.push({ bot: data.response });
-        }
-        if (data.options && data.options.length > 0) {
-            displayOptions(data.options);
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        displayMessage("AI", "There was a problem connecting to the AI.");
-    });
-};
-
-// Attach event listeners
 sendButton.addEventListener("click", () => sendMessage(userInput.value.trim()));
 userInput.addEventListener("keypress", function(event) {
     if (event.key === "Enter") sendMessage(userInput.value.trim());
+});
+
+voiceButton.addEventListener("click", async () => {
+    const recognition = new webkitSpeechRecognition() || new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.start();
+    voiceButton.innerText = "Recording your response...";
+    
+    recognition.onresult = (event) => {
+        tempVoiceInput = event.results[0][0].transcript;
+        voiceButton.innerText = "🎤 Speak";
+        confirmVoiceButton.style.display = "inline-block";
+    };
+});
+
+confirmVoiceButton.addEventListener("click", () => {
+    sendMessage(tempVoiceInput);
+    confirmVoiceButton.style.display = "none";
 });
