@@ -1,24 +1,34 @@
-const API_URL = "https://propcycle-ai-bot.andy-fc3.workers.dev/"; // Cloudflare Worker URL
+// JavaScript Logic for AI Chatbot
+const jsContent = `
+const chatBox = document.getElementById("chat-box");
+const userInput = document.getElementById("user-input");
+const sendButton = document.getElementById("send-button");
 
-// Function to send a message to the AI and display the response
-function sendMessage() {
-    const userInput = document.getElementById("userInput").value.trim();
-    if (!userInput) return; // Prevent empty messages
+function displayMessage(sender, message, isUser = false) {
+    const msgDiv = document.createElement("div");
+    msgDiv.classList.add("chat-message", isUser ? "user-message" : "bot-message");
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-    displayMessage("You", userInput); // Display user message in chat UI
-    document.getElementById("userInput").value = ""; // Clear input box
-
-    fetch(API_URL, {
+function sendMessage(userText) {
+    if (!userText) return;
+    displayMessage("You", userText, true);
+    userInput.value = "";
+    
+    fetch("https://propcycle-ai-bot.andy-fc3.workers.dev/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userInput })
+        body: JSON.stringify({ message: userText })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-            displayMessage("AI", data.choices[0].message.content); // Show AI response
+        if (data.response) {
+            displayMessage("AI", data.response);
+            handleBotOptions(data.options);
         } else {
-            displayMessage("AI", "I couldn't generate a response. Try again.");
+            displayMessage("AI", "Sorry, I couldn't generate a response.");
         }
     })
     .catch(error => {
@@ -27,42 +37,26 @@ function sendMessage() {
     });
 }
 
-// Function to display messages in the chat UI
-function displayMessage(sender, message) {
-    const chatBox = document.getElementById("chatBox");
-    const messageElement = document.createElement("div");
-    messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to latest message
-}
-
-// Function to send an initial AI greeting when the chat opens
-function sendInitialGreeting() {
-    fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "Hello AI" }) // Initial AI greeting
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-            displayMessage("AI", data.choices[0].message.content);
-        } else {
-            displayMessage("AI", "Hello! How can I assist you today?");
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        displayMessage("AI", "There was a problem connecting to the AI.");
+function handleBotOptions(options) {
+    if (!options || !Array.isArray(options)) return;
+    const buttonsDiv = document.createElement("div");
+    options.forEach(option => {
+        const button = document.createElement("button");
+        button.innerText = option;
+        button.classList.add("option-button");
+        button.onclick = () => sendMessage(option);
+        buttonsDiv.appendChild(button);
     });
+    chatBox.appendChild(buttonsDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Run the greeting when the chat UI loads
-document.addEventListener("DOMContentLoaded", sendInitialGreeting);
-
-// Allow pressing "Enter" to send a message
-document.getElementById("userInput").addEventListener("keypress", function(event) {
-    if (event.key === "Enter") {
-        sendMessage();
-    }
+sendButton.addEventListener("click", () => sendMessage(userInput.value.trim()));
+userInput.addEventListener("keypress", function(event) {
+    if (event.key === "Enter") sendMessage(userInput.value.trim());
 });
+window.onload = function() {
+    displayMessage("AI", "Hello! How can I assist you today?");
+};`;
+
+export { htmlContent, jsContent };
