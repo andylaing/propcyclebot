@@ -5,6 +5,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const speakButton = document.getElementById("speak-button");
     const finishRecordingButton = document.getElementById("finish-recording-button");
 
+    if (!chatBox || !userInput || !sendButton || !speakButton || !finishRecordingButton) {
+        console.error("One or more required elements are missing from the DOM.");
+        return;
+    }
+
     let isRecording = false;
     let recognition;
 
