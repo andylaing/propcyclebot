@@ -9,6 +9,7 @@
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #f4f4f4;
+            margin: 0;
             padding: 20px;
         }
         #chat-container {
@@ -24,8 +25,8 @@
             overflow-y: scroll;
             border: 1px solid #ddd;
             padding: 10px;
-            text-align: left;
             background: #fff;
+            text-align: left;
         }
         .chat-message {
             padding: 8px;
@@ -38,10 +39,9 @@
         }
         .bot-message {
             background-color: #f1f1f1;
-            text-align: left;
         }
         #user-input {
-            width: calc(100% - 80px);
+            width: 80%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -54,23 +54,16 @@
             cursor: pointer;
             border-radius: 4px;
         }
-        .speak-button {
-            margin-top: 10px;
+        #speak-button, #finish-recording-button {
             padding: 10px;
-            background: green;
+            background: #28a745;
             color: white;
             border: none;
-            border-radius: 4px;
             cursor: pointer;
+            border-radius: 4px;
+            margin-top: 5px;
         }
-        .stop-recording-button {
-            margin-top: 10px;
-            padding: 10px;
-            background: red;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        #finish-recording-button {
             display: none;
         }
     </style>
@@ -83,10 +76,11 @@
         <div id="chat-box"></div>
         <input type="text" id="user-input" placeholder="Type a message..." />
         <button id="send-button">Send</button>
-        <button id="speak-button" class="speak-button">🎤 Speak</button>
-        <button id="stop-recording-btn" class="stop-recording-button">Click here once you have finished recording</button>
+        <button id="speak-button">Speak</button>
+        <button id="finish-recording-button">Finished Recording</button>
     </div>
 
     <script src="script.js"></script>
+
 </body>
 </html>
