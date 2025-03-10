@@ -3,10 +3,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const userInput = document.getElementById("user-input");
     const sendButton = document.getElementById("send-button");
     const speakButton = document.getElementById("speak-button");
-
+    
     let isRecording = false;
     let recognition;
-    let conversationState = "start"; // Tracks conversation flow
+    let conversationState = "start";
 
     function displayMessage(sender, message, isUser = false) {
         const msgDiv = document.createElement("div");
@@ -96,6 +96,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function startRecording() {
         if (isRecording) return;
         isRecording = true;
+        speakButton.innerText = "Recording...";
+        speakButton.style.backgroundColor = "red";
+
         displayMessage("AI", "Recording your response... Click 'Finished Recording' when done.");
 
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -117,6 +120,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         recognition.onend = function () {
             isRecording = false;
+            speakButton.innerText = "Speak";
+            speakButton.style.backgroundColor = "green";
         };
 
         recognition.start();
@@ -129,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     speakButton.addEventListener("click", startRecording);
 
-    // Start the AI conversation immediately on page load
+    // Start AI conversation immediately
     displayMessage("AI", "Welcome to your Sales Growth Roadmap! Let's get started.");
     setTimeout(() => {
         displayMessage("AI", "What's your full name?");
