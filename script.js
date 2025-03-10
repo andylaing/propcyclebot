@@ -3,7 +3,12 @@ const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
 const speakButton = document.getElementById("speak-button");
-const stopRecordingButton = document.getElementById("stop-recording-btn");
+const stopRecordingButton = document.createElement("button");
+
+stopRecordingButton.innerText = "Submit Response";
+stopRecordingButton.style.display = "none";
+stopRecordingButton.classList.add("stop-recording-btn");
+speakButton.parentNode.insertBefore(stopRecordingButton, speakButton.nextSibling);
 
 let conversationHistory = []; // Store chat history
 
@@ -57,10 +62,13 @@ recognition.continuous = false;
 recognition.interimResults = false;
 recognition.lang = "en-US";
 
+let transcriptCaptured = false; // Prevents duplicate responses
+
 // Start recording
 speakButton.addEventListener("click", () => {
-    speakButton.style.display = "none"; 
-    stopRecordingButton.style.display = "block"; 
+    transcriptCaptured = false; // Reset to ensure single capture
+    speakButton.style.display = "none";
+    stopRecordingButton.style.display = "block";
     displayMessage("AI", "Recording your response...");
     recognition.start();
 });
@@ -72,11 +80,14 @@ stopRecordingButton.addEventListener("click", () => {
     stopRecordingButton.style.display = "none";
 });
 
-// Capture voice and send as text
+// Capture voice and send as text (prevents duplicate messages)
 recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    displayMessage("You", transcript, true);
-    sendMessage(transcript);
+    if (!transcriptCaptured) {
+        transcriptCaptured = true; // Prevent further duplicate captures
+        const transcript = event.results[0][0].transcript;
+        displayMessage("You", transcript, true);
+        sendMessage(transcript);
+    }
 };
 
 // Error handling for voice recognition
